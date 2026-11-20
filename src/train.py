@@ -12,10 +12,8 @@ torch.manual_seed(0)
 EPOCHS = 100
 LR = 1e-3
 BATCH_SIZE = 4
-ONSET_POS_WEIGHT = 20.0     # onsets are rarer than active frames
-
-frame_loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(POS_WEIGHT, device=device))
-onset_loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(ONSET_POS_WEIGHT, device=device))
+POS_WEIGHT = 8.0            # active keys are rare (~2.5%)
+ONSET_POS_WEIGHT = 20.0     # onsets are rarer still
 
 device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
 print("device:", device)
@@ -28,22 +26,19 @@ model = PianoCNN().to(device)
 n_params = sum(p.numel() for p in model.parameters())
 print(f"parameters: {n_params:,} (about {n_params * 4 / 1e6:.1f} MB)")
 
-loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(POS_WEIGHT, device=device))
+frame_loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(POS_WEIGHT, device=device))
+onset_loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(ONSET_POS_WEIGHT, device=device))
 opt = torch.optim.Adam(model.parameters(), lr=LR)
+
 
 # ---------- simple frame-level F1 on the full clips ----------
 def frame_f1(threshold=0.5):
     model.eval()
     tp = fp = fn = 0
     with torch.no_grad():
-        for x, yf, yo in loader:
-            x, yf, yo = x.to(device), yf.to(device), yo.to(device)
-            frame_logits, onset_logits = model(x)
-            loss = frame_loss_fn(frame_logits, yf) + onset_loss_fn(onset_logits, yo)
-            opt.zero_grad()
-            loss.backward()
-            opt.step()
-            total += loss.item()
+        for cqt, roll, _ in train_ds.items:
+            x = torch.from_numpy(cqt)[None, None].to(device)                 # (1,1,264,T)
+            pred = torch.sigmoid(model(x)[0])[0].cpu().numpy() > threshold   # (T,88)
             true = roll.T > 0.5
             tp += (pred & true).sum()
             fp += (pred & ~true).sum()
@@ -54,6 +49,7 @@ def frame_f1(threshold=0.5):
     f1 = 2 * precision * recall / max(precision + recall, 1e-9)
     return precision, recall, f1
 
+
 # ---------- training loop ----------
 CKPT_DIR = ROOT / "checkpoints"
 CKPT_DIR.mkdir(exist_ok=True)
@@ -61,9 +57,10 @@ CKPT_DIR.mkdir(exist_ok=True)
 model.train()
 for epoch in range(1, EPOCHS + 1):
     total = 0.0
-    for x, y in loader:
-        x, y = x.to(device), y.to(device)
-        loss = loss_fn(model(x), y)
+    for x, yf, yo in loader:
+        x, yf, yo = x.to(device), yf.to(device), yo.to(device)
+        frame_logits, onset_logits = model(x)
+        loss = frame_loss_fn(frame_logits, yf) + onset_loss_fn(onset_logits, yo)
         opt.zero_grad()
         loss.backward()
         opt.step()

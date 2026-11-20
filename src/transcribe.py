@@ -9,7 +9,7 @@ from config import *
 from features import load_audio, compute_cqt
 from labels import midi_to_roll, FPS
 from model import PianoCNN
-from midi_utils import roll_to_notes, notes_to_midi, render_audio
+from midi_utils import roll_to_notes, roll_to_notes_onset, notes_to_midi, render_audio
 
 THRESHOLD = 0.5
 MIN_FRAMES = 1
