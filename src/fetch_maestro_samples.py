@@ -2,7 +2,7 @@ from remotezip import RemoteZip
 from config import *
 from maestro_dataset import read_rows
 
-ZIP_URL = "PASTE THE maestro-v3.0.0.zip LINK FROM THE OFFICIAL MAGENTA PAGE"
+ZIP_URL = "https://storage.googleapis.com/magentadata/datasets/maestro/v3.0.0/maestro-v3.0.0.zip"
 
 def shortest(split, n):
     return sorted(read_rows(split), key=lambda r: float(r["duration"]))[:n]
