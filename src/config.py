@@ -13,3 +13,5 @@ BINS_PER_OCTAVE = 36         # 3 bins per semitone
 N_BINS = 264                 # about 7.3 octaves, covers all 88 keys
 N_PITCHES = 88
 CLIP_SECONDS = 20            # length of each test clip
+MAESTRO_CSV = MAESTRO_DIR / "maestro-v3.0.0.csv"
+CACHE_DIR = ROOT / "data" / "cache" / "maestro"
