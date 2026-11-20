@@ -19,6 +19,24 @@ def roll_to_notes(prob, threshold=0.5, min_frames=2):
                 notes.append((a / FPS, b / FPS, k + 21))   # index 0 = MIDI 21 (A0)
     return sorted(notes)
 
+def roll_to_notes_onset(frame_prob, onset_prob, frame_thr=0.5, onset_thr=0.5):
+    """A note starts where onset_prob rises above the threshold, and lasts while
+    frame_prob stays above its threshold or until the next onset of the same key."""
+    T = frame_prob.shape[0]
+    notes = []
+    for k in range(N_PITCHES):
+        on = onset_prob[:, k]
+        fr = frame_prob[:, k] > frame_thr
+        onsets = [t for t in range(T)
+                  if on[t] > onset_thr and (t == 0 or on[t - 1] <= onset_thr)]
+        for i, a in enumerate(onsets):
+            limit = onsets[i + 1] if i + 1 < len(onsets) else T
+            b = a + 1
+            while b < limit and fr[b]:
+                b += 1
+            notes.append((a / FPS, b / FPS, k + 21))
+    return sorted(notes)
+
 
 def notes_to_midi(notes, path, velocity=80):
     pm = pretty_midi.PrettyMIDI()

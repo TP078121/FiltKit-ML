@@ -12,7 +12,10 @@ torch.manual_seed(0)
 EPOCHS = 100
 LR = 1e-3
 BATCH_SIZE = 4
-POS_WEIGHT = 8.0        # active keys are rare (~2.5%), so weight them more
+ONSET_POS_WEIGHT = 20.0     # onsets are rarer than active frames
+
+frame_loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(POS_WEIGHT, device=device))
+onset_loss_fn = nn.BCEWithLogitsLoss(pos_weight=torch.tensor(ONSET_POS_WEIGHT, device=device))
 
 device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
 print("device:", device)
@@ -33,9 +36,14 @@ def frame_f1(threshold=0.5):
     model.eval()
     tp = fp = fn = 0
     with torch.no_grad():
-        for cqt, roll in train_ds.items:
-            x = torch.from_numpy(cqt)[None, None].to(device)        # (1,1,264,T)
-            pred = torch.sigmoid(model(x))[0].cpu().numpy() > threshold   # (T,88)
+        for x, yf, yo in loader:
+            x, yf, yo = x.to(device), yf.to(device), yo.to(device)
+            frame_logits, onset_logits = model(x)
+            loss = frame_loss_fn(frame_logits, yf) + onset_loss_fn(onset_logits, yo)
+            opt.zero_grad()
+            loss.backward()
+            opt.step()
+            total += loss.item()
             true = roll.T > 0.5
             tp += (pred & true).sum()
             fp += (pred & ~true).sum()

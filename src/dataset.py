@@ -7,7 +7,7 @@ from torch.utils.data import Dataset
 
 from config import *
 from features import load_audio, compute_cqt
-from labels import midi_to_roll
+from labels import midi_to_rolls
 
 
 class PianoDataset(Dataset):
@@ -28,8 +28,8 @@ class PianoDataset(Dataset):
             if not mid.exists():
                 continue
             cqt = compute_cqt(load_audio(str(wav)))               # (264, T)
-            roll = midi_to_roll(str(mid), cqt.shape[1])           # (88, T)
-            self.items.append((cqt, roll))
+            frame, onset = midi_to_rolls(str(mid), cqt.shape[1])  # (88, T)
+            self.items.append((cqt, frame, onset))
 
         if not self.items:
             raise RuntimeError(f"No wav/mid pairs found in {folder}")
@@ -39,9 +39,8 @@ class PianoDataset(Dataset):
         return self.samples_per_epoch
 
     def __getitem__(self, idx):
-        cqt, roll = self.items[idx % len(self.items)]
+        cqt, frame, onset = self.items[idx % len(self.items)]
         T = cqt.shape[1]
-
         if self.random_crop and T > self.crop_frames:
             start = random.randint(0, T - self.crop_frames)
         else:
@@ -49,14 +48,15 @@ class PianoDataset(Dataset):
         end = start + self.crop_frames
 
         x = cqt[:, start:end]
-        y = roll[:, start:end]
+        yf = frame[:, start:end]
+        yo = onset[:, start:end]
 
-        # pad if the clip is shorter than the crop
         if x.shape[1] < self.crop_frames:
             pad = self.crop_frames - x.shape[1]
             x = np.pad(x, ((0, 0), (0, pad)))
-            y = np.pad(y, ((0, 0), (0, pad)))
+            yf = np.pad(yf, ((0, 0), (0, pad)))
+            yo = np.pad(yo, ((0, 0), (0, pad)))
 
-        x = torch.from_numpy(x).unsqueeze(0)       # (1, 264, frames)
-        y = torch.from_numpy(y.T.copy())           # (frames, 88)
-        return x, y
+        return (torch.from_numpy(x).unsqueeze(0),
+                torch.from_numpy(yf.T.copy()),
+                torch.from_numpy(yo.T.copy()))

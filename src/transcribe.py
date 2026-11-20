@@ -12,7 +12,7 @@ from model import PianoCNN
 from midi_utils import roll_to_notes, notes_to_midi, render_audio
 
 THRESHOLD = 0.5
-MIN_FRAMES = 2
+MIN_FRAMES = 1
 
 device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
 model = PianoCNN().to(device)
@@ -27,8 +27,9 @@ def predict(wav_path):
     cqt = compute_cqt(load_audio(str(wav_path)))
     x = torch.from_numpy(cqt)[None, None].to(device)
     with torch.no_grad():
-        prob = torch.sigmoid(model(x))[0].cpu().numpy()      # (T, 88)
-    return cqt, prob
+        f_logits, o_logits = model(x)
+    return (cqt, torch.sigmoid(f_logits)[0].cpu().numpy(),
+            torch.sigmoid(o_logits)[0].cpu().numpy())
 
 
 def note_scores(ref_mid, est_notes):
@@ -48,19 +49,22 @@ def note_scores(ref_mid, est_notes):
     return onset, full
 
 
-print(f"{'clip':8s} {'ref notes':>10s} {'pred notes':>11s} {'onset F1':>9s} {'on+off F1':>10s}")
+print(f"{'clip':8s} {'ref':>5s} | {'frame-only: notes':>17s} {'onsetF1':>8s} | {'with onset: notes':>17s} {'onsetF1':>8s} {'on+offF1':>9s}")
 first = None
 for wav in sorted(SYNTH_DIR.glob("clip_*.wav")):
     ref_mid = wav.with_suffix(".mid")
-    cqt, prob = predict(wav)
-    notes = roll_to_notes(prob, THRESHOLD, MIN_FRAMES)
+    cqt, prob, oprob = predict(wav)
 
-    notes_to_midi(notes, OUT / f"{wav.stem}_pred.mid")
-    sf.write(str(OUT / f"{wav.stem}_pred.wav"), render_audio(notes), SAMPLE_RATE)
+    notes_a = roll_to_notes(prob, THRESHOLD, 1)
+    notes_b = roll_to_notes_onset(prob, oprob, THRESHOLD, THRESHOLD)
+
+    notes_to_midi(notes_b, OUT / f"{wav.stem}_pred.mid")
+    sf.write(str(OUT / f"{wav.stem}_pred.wav"), render_audio(notes_b), SAMPLE_RATE)
 
     n_ref = sum(len(i.notes) for i in pretty_midi.PrettyMIDI(str(ref_mid)).instruments)
-    onset, full = note_scores(ref_mid, notes)
-    print(f"{wav.stem:8s} {n_ref:10d} {len(notes):11d} {onset:9.3f} {full:10.3f}")
+    on_a, _ = note_scores(ref_mid, notes_a)
+    on_b, full_b = note_scores(ref_mid, notes_b)
+    print(f"{wav.stem:8s} {n_ref:5d} | {len(notes_a):17d} {on_a:8.3f} | {len(notes_b):17d} {on_b:8.3f} {full_b:9.3f}")
 
     if first is None:
         first = (wav, prob, midi_to_roll(str(ref_mid), cqt.shape[1]))
