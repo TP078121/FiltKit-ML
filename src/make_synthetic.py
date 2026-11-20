@@ -1,4 +1,4 @@
-import glob, random, os
+import random
 import numpy as np
 import pretty_midi
 import soundfile as sf
@@ -36,12 +36,21 @@ def synth(pm, sr, seconds):
     audio = audio[:int(sr * seconds)]
     return 0.9 * audio / (np.abs(audio).max() + 1e-9)
 
-files = glob.glob("data/**/*.mid*", recursive=True)
+# ---------- find MAESTRO MIDI files ----------
+if not MAESTRO_DIR.exists():
+    raise SystemExit(f"Folder not found: {MAESTRO_DIR}\nCheck the folder name and location.")
+
+files = sorted(list(MAESTRO_DIR.rglob("*.midi")) + list(MAESTRO_DIR.rglob("*.mid")))
+print("looking in:", MAESTRO_DIR)
 print("found", len(files), "MIDI files")
-os.makedirs("data/synthetic", exist_ok=True)
+if len(files) < 5:
+    raise SystemExit("Fewer than 5 MIDI files found. Check the extracted folder.")
+
+SYNTH_DIR.mkdir(parents=True, exist_ok=True)
 
 for i, path in enumerate(random.sample(files, 5)):
-    pm = crop_midi(pretty_midi.PrettyMIDI(path), CLIP_SECONDS)
-    pm.write(f"data/synthetic/clip_{i}.mid")
-    sf.write(f"data/synthetic/clip_{i}.wav", synth(pm, SAMPLE_RATE, CLIP_SECONDS), SAMPLE_RATE)
-    print("made clip", i, "from", os.path.basename(path), "-", len(pm.instruments[0].notes), "notes")
+    pm = crop_midi(pretty_midi.PrettyMIDI(str(path)), CLIP_SECONDS)
+    pm.write(str(SYNTH_DIR / f"clip_{i}.mid"))
+    sf.write(str(SYNTH_DIR / f"clip_{i}.wav"),
+             synth(pm, SAMPLE_RATE, CLIP_SECONDS), SAMPLE_RATE)
+    print("made clip", i, "from", path.name, "-", len(pm.instruments[0].notes), "notes")
