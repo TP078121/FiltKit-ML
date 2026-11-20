@@ -1,0 +1,11 @@
+numpy
+scipy
+matplotlib
+librosa
+soundfile
+pretty_midi
+mir_eval
+music21
+torch
+torchaudio
+streamlit
