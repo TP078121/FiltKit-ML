@@ -1,0 +1,30 @@
+{
+  "classes": [
+    "kick",
+    "snare",
+    "hihat_closed",
+    "hihat_open",
+    "tom",
+    "crash",
+    "ride"
+  ],
+  "sr": 16000,
+  "hop": 160,
+  "n_fft": 1024,
+  "n_mels": 128,
+  "fmin": 30,
+  "fmax": 8000,
+  "args": {
+    "cache_dir": "data/cache/drum_synth",
+    "epochs": 40,
+    "steps": 20,
+    "batch_size": 8,
+    "crop_frames": 1000,
+    "lr": 0.001,
+    "pos_weight": 5.0,
+    "workers": 0,
+    "val_pieces": 3,
+    "run": "drum_smoke",
+    "resume": false
+  }
+}

@@ -98,7 +98,7 @@ def main():
         data.append((ref, *predict_full(model, cqt, device)))
 
     print(f"\n{'threshold':>9s} {'onset F1':>9s} {'on+off F1':>10s}   (frame and onset threshold equal)")
-    for thr in [0.3, 0.4, 0.5, 0.6, 0.7]:
+    for thr in [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
         on_s, full_s = [], []
         for ref, fp, op in data:
             on, full = note_f1(ref, decode_notes(fp, op, thr, thr))
