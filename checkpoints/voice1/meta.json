@@ -1,0 +1,24 @@
+{
+  "args": {
+    "train_cache": [
+      "data/cache/voice_pairs",
+      "data/cache/my_new_dataset"
+    ],
+    "val_cache": "data/cache/voice_pairs",
+    "val_split": "validation",
+    "init_from": "checkpoints/piano_best.pt",
+    "epochs": 30,
+    "steps": 300,
+    "batch_size": 16,
+    "crop_frames": 256,
+    "lr": 0.001,
+    "pos_weight": 8.0,
+    "onset_pos_weight": 20.0,
+    "pitch_aug": 0.8,
+    "max_shift": 12,
+    "workers": 4,
+    "val_pieces": 10,
+    "run": "voice1",
+    "resume": false
+  }
+}

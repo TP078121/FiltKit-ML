@@ -38,6 +38,7 @@ def main():
     ap.add_argument("--pos-weight", type=float, default=8.0)
     ap.add_argument("--onset-pos-weight", type=float, default=20.0)
     ap.add_argument("--pitch-aug", type=float, default=0.5, help="probability of a +-1..2 semitone shift")
+    ap.add_argument("--max-shift", type=int, default=2, help="largest pitch shift in semitones (voice: try 12)")
     ap.add_argument("--workers", type=int, default=0)
     ap.add_argument("--val-pieces", type=int, default=10)
     ap.add_argument("--run", default="guitar1")
@@ -55,7 +56,8 @@ def main():
         json.dump({"args": vars(args)}, f, indent=2)
 
     train_ds = GuitarDataset(args.train_cache, "train", crop_frames=args.crop_frames,
-                             samples_per_epoch=args.steps * args.batch_size, pitch_aug=args.pitch_aug)
+                             samples_per_epoch=args.steps * args.batch_size, pitch_aug=args.pitch_aug,
+                             max_shift=args.max_shift)
     loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=False,
                         num_workers=args.workers, persistent_workers=args.workers > 0,
                         pin_memory=(device == "cuda"))

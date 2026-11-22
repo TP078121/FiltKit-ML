@@ -1,0 +1,4 @@
+epoch,train_loss,val_onset_f1,val_onset_offset_f1,val_pieces,seconds
+1,0.12601,0.5972,0.3193,2,8
+2,0.09314,0.6350,0.3170,2,4
+3,0.06712,0.6152,0.2446,2,4
