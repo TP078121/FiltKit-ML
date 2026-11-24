@@ -1,0 +1,6 @@
+{
+  "piano":  {"weights": "checkpoints/piano_full1/best.pt", "frame_thr": 0.8, "onset_thr": 0.8},
+  "guitar": {"weights": "checkpoints/guitar_ft/best.pt",    "frame_thr": 0.5, "onset_thr": 0.5},
+  "voice":  {"weights": "checkpoints/voice1/best.pt",       "frame_thr": 0.5, "onset_thr": 0.5},
+  "drums":  {"weights": "checkpoints/drums1/best.pt",       "thr": 0.5, "window": 2}
+}
