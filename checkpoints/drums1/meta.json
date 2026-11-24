@@ -1,0 +1,30 @@
+{
+  "classes": [
+    "kick",
+    "snare",
+    "hihat_closed",
+    "hihat_open",
+    "tom",
+    "crash",
+    "ride"
+  ],
+  "sr": 16000,
+  "hop": 160,
+  "n_fft": 1024,
+  "n_mels": 128,
+  "fmin": 30,
+  "fmax": 8000,
+  "args": {
+    "cache_dir": "E:\\ML\\FiltKit-ML-main\\data\\cache\\egmd",
+    "epochs": 30,
+    "steps": 400,
+    "batch_size": 16,
+    "crop_frames": 1000,
+    "lr": 0.001,
+    "pos_weight": 5.0,
+    "workers": 4,
+    "val_pieces": 20,
+    "run": "drums1",
+    "resume": false
+  }
+}

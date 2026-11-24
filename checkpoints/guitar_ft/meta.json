@@ -1,0 +1,23 @@
+{
+  "args": {
+    "train_cache": [
+      "data/cache/guitarset"
+    ],
+    "val_cache": "data/cache/guitarset",
+    "val_split": "validation",
+    "init_from": "checkpoints/guitar_slakh/best.pt",
+    "epochs": 20,
+    "steps": 200,
+    "batch_size": 16,
+    "crop_frames": 256,
+    "lr": 0.0003,
+    "pos_weight": 8.0,
+    "onset_pos_weight": 20.0,
+    "pitch_aug": 0.5,
+    "max_shift": 2,
+    "workers": 0,
+    "val_pieces": 10,
+    "run": "guitar_ft",
+    "resume": false
+  }
+}

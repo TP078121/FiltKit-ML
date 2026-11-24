@@ -1,0 +1,23 @@
+{
+  "args": {
+    "train_cache": [
+      "data/cache/slakh_guitar"
+    ],
+    "val_cache": "data/cache/slakh_guitar",
+    "val_split": "validation",
+    "init_from": "checkpoints/piano_best.pt",
+    "epochs": 30,
+    "steps": 500,
+    "batch_size": 16,
+    "crop_frames": 256,
+    "lr": 0.001,
+    "pos_weight": 8.0,
+    "onset_pos_weight": 20.0,
+    "pitch_aug": 0.5,
+    "max_shift": 2,
+    "workers": 4,
+    "val_pieces": 10,
+    "run": "guitar_slakh",
+    "resume": false
+  }
+}
